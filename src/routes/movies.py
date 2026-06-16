@@ -18,7 +18,10 @@ router = APIRouter()
 async def get_movies(page: int = Query(1, ge=1),
                      per_page: int = Query(10, ge=1, le=20),
                      db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(MovieModel).order_by(MovieModel.id.desc()).limit(per_page).offset((page - 1) * per_page))
+    result = await db.execute(select(MovieModel).
+                              order_by(MovieModel.id.desc()).
+                              limit(per_page).
+                              offset((page - 1) * per_page))
     movies = result.scalars().all()
     if not movies:
         raise HTTPException(status_code=404, detail="No movies found.")
@@ -42,22 +45,28 @@ async def get_movies(page: int = Query(1, ge=1),
             "total_items": total_items}
 
 
-@router.post("/movies/", status_code=201, response_model=schemas.MovieDetailResponseSchema)
-async def create_movie(movie_data: schemas.MovieCreateRequestSchema, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(MovieModel).where(MovieModel.name == movie_data.name, MovieModel.date == movie_data.date))
+@router.post("/movies/", status_code=201,
+             response_model=schemas.MovieDetailResponseSchema)
+async def create_movie(movie_data: schemas.MovieCreateRequestSchema,
+                       db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(MovieModel).where(MovieModel.name == movie_data.name,
+                                                       MovieModel.date == movie_data.date))
     movies = result.scalar_one_or_none()
     if movies:
         raise HTTPException(status_code=409,
-                            detail=f"A movie with the name '{movie_data.name}' and release date '{movie_data.date}' already exists.")
+                            detail=f"A movie with the name '{movie_data.name}' "
+                                   f"and release date '{movie_data.date}' already exists.")
 
-    country_result = await db.execute(select(CountryModel).where(CountryModel.code == movie_data.country))
+    country_result = await db.execute(select(CountryModel).
+                                      where(CountryModel.code == movie_data.country))
     db_country = country_result.scalar_one_or_none()
     if not db_country:
         db_country = CountryModel(code=movie_data.country)
 
     db_genres = []
     for genre_name in movie_data.genres:
-        genre_result = await db.execute(select(GenreModel).where(GenreModel.name == genre_name))
+        genre_result = await db.execute(select(GenreModel).
+                                        where(GenreModel.name == genre_name))
         db_genre = genre_result.scalar_one_or_none()
         if not db_genre:
             db_genre = GenreModel(name=genre_name)
@@ -65,7 +74,8 @@ async def create_movie(movie_data: schemas.MovieCreateRequestSchema, db: AsyncSe
 
     db_actors = []
     for actor_name in movie_data.actors:
-        actor_result = await db.execute(select(ActorModel).where(ActorModel.name == actor_name))
+        actor_result = await db.execute(select(ActorModel).
+                                        where(ActorModel.name == actor_name))
         db_actor = actor_result.scalar_one_or_none()
         if not db_actor:
             db_actor = ActorModel(name=actor_name)
@@ -73,7 +83,8 @@ async def create_movie(movie_data: schemas.MovieCreateRequestSchema, db: AsyncSe
 
     db_languages = []
     for lang_name in movie_data.languages:
-        lang_result = await db.execute(select(LanguageModel).where(LanguageModel.name == lang_name))
+        lang_result = await db.execute(select(LanguageModel).
+                                       where(LanguageModel.name == lang_name))
         db_lang = lang_result.scalar_one_or_none()
         if not db_lang:
             db_lang = LanguageModel(name=lang_name)
@@ -111,7 +122,8 @@ async def create_movie(movie_data: schemas.MovieCreateRequestSchema, db: AsyncSe
     return complete_movie
 
 
-@router.get("/movies/{movie_id}/", response_model=schemas.MovieDetailResponseSchema)
+@router.get("/movies/{movie_id}/",
+            response_model=schemas.MovieDetailResponseSchema)
 async def get_movie(movie_id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(MovieModel)
@@ -126,7 +138,8 @@ async def get_movie(movie_id: int, db: AsyncSession = Depends(get_db)):
     movie = result.unique().scalar_one_or_none()
 
     if not movie:
-        raise HTTPException(status_code=404, detail="Movie with the given ID was not found.")
+        raise HTTPException(status_code=404,
+                            detail="Movie with the given ID was not found.")
     return movie
 
 
@@ -135,17 +148,21 @@ async def delete_movie(movie_id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(MovieModel).where(MovieModel.id == movie_id))
     movie = result.scalar_one_or_none()
     if not movie:
-        raise HTTPException(status_code=404, detail="Movie with the given ID was not found.")
+        raise HTTPException(status_code=404,
+                            detail="Movie with the given ID was not found.")
     await db.delete(movie)
     await db.commit()
 
 
 @router.patch("/movies/{movie_id}/")
-async def update_movie(movie_id: int, movie_data: schemas.MovieUpdateRequestSchema, db: AsyncSession = Depends(get_db)):
+async def update_movie(movie_id: int,
+                       movie_data: schemas.MovieUpdateRequestSchema,
+                       db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(MovieModel).where(MovieModel.id == movie_id))
     movie = result.scalar_one_or_none()
     if not movie:
-        raise HTTPException(status_code=404, detail="Movie with the given ID was not found.")
+        raise HTTPException(status_code=404,
+                            detail="Movie with the given ID was not found.")
 
     update_data = movie_data.model_dump(exclude_unset=True)
 
