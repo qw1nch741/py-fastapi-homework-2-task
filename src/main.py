@@ -18,7 +18,15 @@ app.include_router(movie_router, prefix=f"{api_version_prefix}/theater", tags=["
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
+    # Only return 400 for Create (POST) and Update (PATCH) endpoints
+    if request.method in ["POST", "PATCH"]:
+        return JSONResponse(
+            status_code=400,
+            content={"detail": "Invalid input data."},
+        )
+
+    # For GET requests (like invalid page numbers), fall back to the default 422
     return JSONResponse(
-        status_code=400,
-        content={"detail": "Invalid input data."},
+        status_code=422,
+        content={"detail": exc.errors()}
     )
