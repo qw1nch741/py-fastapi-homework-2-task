@@ -2,6 +2,7 @@ from fastapi import FastAPI
 
 from routes import movie_router
 
+from fastapi import Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
@@ -17,8 +18,8 @@ app.include_router(movie_router, prefix=f"{api_version_prefix}/theater", tags=["
 
 
 @app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request, exc):
-    # Only return 400 for Create (POST) and Update (PATCH) endpoints
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    # Only override the behavior for Create and Update endpoints
     if request.method in ["POST", "PATCH"]:
         return JSONResponse(
             status_code=400,
