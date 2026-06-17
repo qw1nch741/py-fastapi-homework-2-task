@@ -16,11 +16,14 @@ router = APIRouter()
 async def get_movies(page: int = Query(1, ge=1),
                      per_page: int = Query(10, ge=1, le=20),
                      db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(MovieModel).
-                              order_by(MovieModel.id.desc()).
-                              limit(per_page).
-                              offset((page - 1) * per_page))
+    result = await db.execute(
+        select(MovieModel)
+        .order_by(MovieModel.id.desc())
+        .limit(per_page)
+        .offset((page - 1) * per_page)
+    )
     movies = result.scalars().all()
+
     if not movies:
         raise HTTPException(status_code=404, detail="No movies found.")
 

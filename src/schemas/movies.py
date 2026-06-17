@@ -72,7 +72,7 @@ class MovieCreateRequestSchema(BaseModel):
 
     @field_validator('date')
     @classmethod
-    def validate_date(cls, v: date) -> date:
+    def validate_future_date(cls, v: date):
         if v > date.today() + timedelta(days=365):
             raise ValueError("Date cannot be more than one year in the future.")
         return v
@@ -98,7 +98,7 @@ class MovieUpdateRequestSchema(BaseModel):
 
     @field_validator('date')
     @classmethod
-    def validate_date(cls, v: Optional[date]) -> Optional[date]:
+    def validate_future_date(cls, v: Optional[date]):
         if v is not None and v > date.today() + timedelta(days=365):
             raise ValueError("Date cannot be more than one year in the future.")
         return v
