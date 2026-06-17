@@ -1,5 +1,8 @@
-from pydantic import BaseModel, ConfigDict, Field
-from datetime import date
+from pydantic import (BaseModel,
+                      ConfigDict,
+                      Field,
+                      field_validator)
+from datetime import date, timedelta
 from typing import List, Optional
 
 from database.models import MovieStatusEnum
@@ -67,6 +70,13 @@ class MovieCreateRequestSchema(BaseModel):
     actors: List[str]
     languages: List[str]
 
+    @field_validator('date')
+    @classmethod
+    def validate_date(cls, v: date) -> date:
+        if v > date.today() + timedelta(days=365):
+            raise ValueError("Date cannot be more than one year in the future.")
+        return v
+
 
 class MovieSummarySchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -85,6 +95,13 @@ class MovieUpdateRequestSchema(BaseModel):
     status: Optional[MovieStatusEnum] = None
     budget: Optional[float] = Field(None, ge=0)
     revenue: Optional[float] = Field(None, ge=0)
+
+    @field_validator('date')
+    @classmethod
+    def validate_date(cls, v: Optional[date]) -> Optional[date]:
+        if v is not None and v > date.today() + timedelta(days=365):
+            raise ValueError("Date cannot be more than one year in the future.")
+        return v
 
 
 class MovieListResponseSchema(BaseModel):
